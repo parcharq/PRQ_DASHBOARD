@@ -7127,5 +7127,30 @@
   init();
 })();
 </script>
+<!-- aviso-de-version -->
+<div id="updBanner" style="display:none;position:fixed;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top));z-index:9000;align-items:center;gap:12px;padding:9px 9px 9px 16px;border-radius:999px;background:rgba(20,16,38,.96);border:1px solid rgba(255,255,255,.16);box-shadow:0 14px 40px -10px rgba(0,0,0,.7);color:#fff;font:600 13.5px system-ui,-apple-system,sans-serif;white-space:nowrap;max-width:calc(100vw - 24px)">✨ Hay una versión nueva<button id="updBtn" style="border:none;border-radius:999px;padding:8px 14px;font:700 13px system-ui,-apple-system,sans-serif;color:#fff;background:#6a62b8;cursor:pointer">Actualizar</button></div>
+<script>
+/* Aviso de versión nueva: compara esta versión con version.json (sin caché). */
+(function(){
+  var VERSION = "2026-10-27.3";
+  var avisado = false;
+  function revisar(){
+    if(avisado || location.protocol === 'file:') return;
+    fetch('version.json?t=' + Date.now(), { cache:'no-store' })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){ if(j && j.v && j.v !== VERSION) mostrar(j.v); })
+      .catch(function(){});
+  }
+  function mostrar(v){
+    avisado = true;
+    var b = document.getElementById('updBanner');
+    b.style.display = 'flex';
+    document.getElementById('updBtn').onclick = function(){ location.replace(location.pathname + '?v=' + encodeURIComponent(v)); };
+  }
+  setTimeout(revisar, 3000);
+  setInterval(revisar, 5 * 60 * 1000);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible') revisar(); });
+})();
+</script>
 </body>
 </html>
