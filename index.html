@@ -1581,7 +1581,7 @@
 
 <nav class="m-bnav" id="mBnav"><button data-go="mhoy"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 10 L10 4 L17 10" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 9 V16 H15 V9" stroke-linecap="round" stroke-linejoin="round"/></svg>Hoy</button><button data-go="mhor"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l3 2" stroke-linecap="round" stroke-linejoin="round"/></svg>Horarios</button><button class="m-plus" id="mPlusBtn" aria-label="Agregar">+</button><button data-go="mfin"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 16V9M9.5 16V5M15 16v-7" stroke-linecap="round"/></svg>Finanzas</button><button id="mMasBtn"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4.5" cy="10" r="1.2"/><circle cx="10" cy="10" r="1.2"/><circle cx="15.5" cy="10" r="1.2"/></svg>Más</button></nav>
 <div class="m-sheet-bg" id="mPlusSheet"><div class="m-sheet"><div class="m-grab"></div><div class="m-sheet-title">¿Qué quieres agregar?</div><div class="m-grid"><button data-add="evento"><span>📅</span>Reunión / evento</button><button data-add="bloque"><span>🕒</span>Bloque de horario</button><button data-add="ingreso"><span>💰</span>Ingreso</button><button data-add="egreso"><span>🧾</span>Egreso</button><button data-add="tarea"><span>✅</span>Tarea</button><button data-add="idea"><span>💡</span>Idea</button></div></div></div>
-<div class="m-sheet-bg" id="mMasSheet"><div class="m-sheet"><div class="m-grab"></div><div class="m-grid"><button data-go="programacion"><span>📅</span>Agenda completa</button><button data-go="tareas"><span>✅</span>Tareas</button><button data-go="ideas"><span>💡</span>Ideas</button><button data-go="habitos"><span>✔️</span>Hábitos</button></div><div class="m-links"><button data-act="sync">↻ Actualizar con lo último del equipo</button><button data-act="export">⬇ Exportar respaldo</button><button data-act="logout" class="danger">Cerrar sesión</button></div></div></div>
+<div class="m-sheet-bg" id="mMasSheet"><div class="m-sheet"><div class="m-grab"></div><div class="m-grid"><button data-go="programacion"><span>📅</span>Agenda completa</button><button data-go="tareas"><span>✅</span>Tareas</button><button data-go="ideas"><span>💡</span>Ideas</button><button data-go="habitos"><span>✔️</span>Hábitos</button></div><div class="m-links"><button data-act="sync">↻ Actualizar con lo último del equipo</button><button data-act="puente">📩 Ingresos por SMS (Basamento)</button><button data-act="export">⬇ Exportar respaldo</button><button data-act="logout" class="danger">Cerrar sesión</button></div></div></div>
 <button class="sync-fab" id="syncFabBtn" title="Actualizar con los cambios de todo el equipo">
   <span class="sync-fab-badge" id="syncFabBadge" style="display:none;"></span>
   <svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M4 10a6 6 0 0110-4.2M16 10a6 6 0 01-10 4.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 3v3h-3M6 17v-3h3" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -2258,6 +2258,7 @@
     <div class="sidebar-footer">
       <div class="mini-user" id="miniUser"></div>
       <button class="switch-link" id="switchUserBtn">Cerrar sesión</button>
+      <button class="switch-link" id="puenteSmsBtn">Ingresos por SMS (Basamento)</button>
       <button class="switch-link" id="exportDataBtn">Exportar datos (respaldo)</button>
       <button class="switch-link" id="importDataBtn">Restaurar desde respaldo</button>
       <input type="file" id="importFileInput" accept="application/json,.json" style="display:none;">
@@ -6868,6 +6869,109 @@
       }
     }
   }
+  /* ================= INGRESOS POR SMS (puente con el lector de SMS de Samuel) =================
+     Cuando a Samuel le llega un SMS de plata recibida de un cliente (ej. "Basamento"), su lector
+     lo deja en una bandeja. Al abrir o actualizar el dashboard se trae y se registra aquí:
+     como abono si el cliente tiene una cuenta por cobrar pendiente, o como ingreso normal. */
+  const PUENTE_RPC = 'https://lafahdrnkqdbtpfzwfht.supabase.co/rest/v1/rpc/';
+  const PUENTE_KEY = 'sb_publishable_Y75BgtwGsw-YKlPc40hddg_pVJvwwqZ'; // clave pública del proyecto del lector
+  const PUENTE_AUTOR = 'Automático (SMS)';
+  let puenteToken = null, puenteImportando = false;
+  const normTxt = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+  async function cargarPuente(){
+    try{
+      const r = await window.storage.get('config:puente-sms', true);
+      puenteToken = (r && r.value) ? (JSON.parse(r.value).token || null) : null;
+    }catch(e){ puenteToken = null; }
+  }
+  async function puenteRpc(fn, body){
+    const r = await fetch(PUENTE_RPC + fn, { method:'POST', headers:{ apikey:PUENTE_KEY, 'Content-Type':'application/json' }, body:JSON.stringify(body) });
+    if(!r.ok) throw new Error('puente ' + r.status);
+    return r.json();
+  }
+  async function importarIngresosSms(){
+    if(puenteImportando || !currentUser || !finLoaded) return 0;
+    puenteImportando = true;
+    try{
+      await cargarPuente();
+      if(!puenteToken) return 0;
+      let filas;
+      try{ filas = await puenteRpc('prq_pendientes', { p_token: puenteToken }); }catch(e){ return 0; }
+      if(!Array.isArray(filas) || !filas.length) return 0;
+
+      const now = new Date().toISOString();
+      const listos = [], resumen = [];
+      let tocoCuentas = false, nuevos = 0;
+      filas.forEach(f => {
+        const idIng = 'sms_' + f.id;
+        const yaEsta = finIngresos.some(i => i.id === idIng) || finCuentas.some(c => (c.abonos||[]).some(a => a.smsId === f.id));
+        if(yaEsta){ listos.push(f.id); return; }
+        const monto = Number(f.monto) || 0, fecha = f.fecha;
+        const cuenta = finCuentas
+          .filter(c => c.tipo === 'cobrar' && estadoCuenta(c) !== 'completo' && normTxt(c.contraparte).includes(normTxt(f.cliente)))
+          .sort((a,b) => (a.fechaEsperada||'9999').localeCompare(b.fechaEsperada||'9999'))[0];
+        if(cuenta){
+          cuenta.abonos = cuenta.abonos || [];
+          cuenta.abonos.push({ id:uid(), fecha, monto, nota:'Registrado automáticamente por SMS', smsId:f.id });
+          cuenta.actualizadoPor = PUENTE_AUTOR; cuenta.actualizadoEn = now;
+          finIngresos.push({ id:idIng, fecha, cliente:cuenta.contraparte, concepto:`${cuenta.concepto} (abono · SMS)`, monto, creadoPor:PUENTE_AUTOR, creadoEn:now, actualizadoPor:PUENTE_AUTOR, actualizadoEn:now });
+          tocoCuentas = true;
+          resumen.push(`${formatCOP(monto)} de ${cuenta.contraparte} (abono)`);
+        }else{
+          finIngresos.push({ id:idIng, fecha, cliente:f.cliente, concepto:f.concepto || 'Transferencia recibida (SMS)', monto, destino:'operacion', creadoPor:PUENTE_AUTOR, creadoEn:now, actualizadoPor:PUENTE_AUTOR, actualizadoEn:now });
+          resumen.push(`${formatCOP(monto)} de ${f.cliente}`);
+        }
+        listos.push(f.id); nuevos++;
+      });
+
+      if(nuevos){
+        pendingSaves++;
+        try{
+          await window.storage.set('finanzas:ingresos', JSON.stringify(finIngresos), true);
+          if(tocoCuentas) await window.storage.set('finanzas:cuentas', JSON.stringify(finCuentas), true);
+        }catch(e){
+          showToast('No se pudo registrar el ingreso que llegó por SMS. Se reintentará al actualizar.');
+          return 0;
+        }finally{ pendingSaves--; }
+        await logActivity('Financiera', `registró automáticamente por SMS: ${resumen.join(', ')}`);
+        showToast('💰 Llegó por SMS: ' + resumen.join(', '));
+      }
+      if(listos.length){ try{ await puenteRpc('prq_confirmar', { p_token: puenteToken, p_ids: listos }); }catch(e){} }
+      return nuevos;
+    }finally{ puenteImportando = false; }
+  }
+  // se revisa cada vez que se cargan los datos (al entrar y al tocar "Actualizar")
+  const _loadAllDataSinPuente = loadAllData;
+  loadAllData = async function(){ await _loadAllDataSinPuente(); await importarIngresosSms(); };
+  // ... y al volver a la app
+  document.addEventListener('visibilitychange', async ()=>{
+    if(document.visibilityState !== 'visible' || isSyncing || pendingSaves > 0) return;
+    const n = await importarIngresosSms();
+    if(n) renderAll();
+  });
+
+  async function configurarPuente(){
+    if(!currentUser) return;
+    await cargarPuente();
+    const v = prompt(puenteToken
+      ? 'Ingresos por SMS ya está conectado ✓\n\nPara cambiarlo pega un código nuevo. Para desconectarlo borra el texto y acepta.'
+      : 'Pega el código de "Ingresos por SMS" (empieza por prq_):', puenteToken || '');
+    if(v === null) return;
+    const t = v.trim();
+    if(t && !/^prq_[a-f0-9]{16,}$/i.test(t)){ showToast('Ese código no parece válido.'); return; }
+    try{
+      await window.storage.set('config:puente-sms', JSON.stringify({ token: t || null, por: currentUser.nombre, en: new Date().toISOString() }), true);
+    }catch(e){ showToast('No se pudo guardar. Intenta de nuevo.'); return; }
+    puenteToken = t || null;
+    if(!t){ showToast('Ingresos por SMS desconectado.'); return; }
+    try{ await puenteRpc('prq_pendientes', { p_token: t }); }catch(e){ showToast('Guardado, pero el código no respondió. Revísalo.'); return; }
+    showToast('Conectado ✓ Los pagos de Basamento por SMS se registrarán solos.');
+    const n = await importarIngresosSms(); if(n) renderAll();
+  }
+  const btnPuente = document.getElementById('puenteSmsBtn');
+  if(btnPuente) btnPuente.addEventListener('click', configurarPuente);
+
   /* ================= VERSIÓN MÓVIL (sencilla) ================= */
   (function(){
     const MQ = window.matchMedia ? window.matchMedia('(max-width:640px)') : { matches:false, addEventListener(){} };
@@ -6915,6 +7019,7 @@
       if(b.dataset.go) irA(b.dataset.go);
       else if(b.dataset.act === 'sync') $('syncFabBtn').click();
       else if(b.dataset.act === 'export') $('exportDataBtn').click();
+      else if(b.dataset.act === 'puente') configurarPuente();
       else if(b.dataset.act === 'logout') $('switchUserBtn').click();
     });
     $('mPlusSheet').addEventListener('click', e=>{
@@ -7132,7 +7237,7 @@
 <script>
 /* Aviso de versión nueva: compara esta versión con version.json (sin caché). */
 (function(){
-  var VERSION = "2026-10-27.3";
+  var VERSION = "2026-10-27.4";
   var avisado = false;
   function revisar(){
     if(avisado || location.protocol === 'file:') return;
