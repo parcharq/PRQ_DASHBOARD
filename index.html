@@ -2,7 +2,14 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a1533">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PRQ Studio">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
 <title>PRQ Studio — Dashboard</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
@@ -1320,6 +1327,81 @@
     .sync-fab{ bottom:16px; right:16px; padding:10px; }
     .sync-fab-text{ display:none; }
   }
+
+  /* ================= VERSIÓN MÓVIL ================= */
+  .m-only, .m-bnav, .m-sheet-bg{ display:none; }
+  @media (max-width: 640px){
+    .m-only{ display:block; }
+    .app{ grid-template-columns:1fr; height:auto; min-height:100vh; }
+    .sidebar{ display:none; }
+    .main{ height:auto; overflow:visible; padding:calc(14px + env(safe-area-inset-top)) 16px calc(104px + env(safe-area-inset-bottom)) 16px; }
+    /* rendimiento: sin desenfoques pesados */
+    .panel, .stat-card, .modal, .kcard, .task-card, .sync-fab, .toast{ -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+    .panel, .stat-card{ background:rgba(41,31,77,0.92) !important; }
+    .cursor-glow{ display:none; }
+    /* encabezados más compactos */
+    .topbar{ flex-wrap:wrap; gap:12px; margin-bottom:16px; }
+    .greeting{ font-size:30px !important; line-height:1.1; }
+    .topbar-actions{ width:100%; }
+    .topbar-actions .btn{ flex:1; justify-content:center; }
+    .stats-row{ grid-template-columns:repeat(2,1fr) !important; gap:10px; }
+    .inicio-grid, .cuentas-two-col, .prog-layout{ grid-template-columns:1fr !important; }
+    /* tablero: una columna a la vez, se desliza de lado */
+    .kanban{ display:flex !important; overflow-x:auto; scroll-snap-type:x mandatory; gap:12px; margin:0 -16px; padding:0 16px 8px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+    .kanban::-webkit-scrollbar{ display:none; }
+    .kcol{ flex:0 0 86%; scroll-snap-align:start; max-height:none !important; }
+    .subtabs{ flex-wrap:nowrap !important; overflow-x:auto; scrollbar-width:none; max-width:100%; -webkit-overflow-scrolling:touch; }
+    .subtabs::-webkit-scrollbar{ display:none; }
+    .subtab{ flex:0 0 auto; white-space:nowrap; }
+    html, body{ overflow-x:hidden; }
+    .view, .panel{ min-width:0; max-width:100%; }
+    .search-field{ margin-left:0; width:100%; }
+    .search-field input{ width:100% !important; }
+    /* programación: agenda en lista */
+    #view-programacion .cal-grid{ display:none !important; }
+    #view-programacion .prog-layout > .panel:first-child{ padding:6px 14px; }
+    /* tablas y horarios: se desplazan de lado sin romper la página */
+    .fin-table{ display:block; overflow-x:auto; white-space:nowrap; }
+    .horario-wrap, .habitos-grid, .habito-grid{ overflow-x:auto; }
+    /* ventanas como hojas que suben desde abajo */
+    .overlay{ align-items:flex-end; padding:0; z-index:95 !important; }
+    .modal{ max-width:none; border-radius:24px 24px 0 0; max-height:92vh; padding:22px 18px calc(22px + env(safe-area-inset-bottom)); background:#241d47 !important; }
+    .field, input, select, textarea{ font-size:16px !important; }
+    /* botón de actualizar y avisos por encima de la barra */
+    .sync-fab{ bottom:calc(84px + env(safe-area-inset-bottom)) !important; right:14px !important; padding:10px !important; }
+    .sync-fab-text{ display:none !important; }
+    .toast{ bottom:calc(150px + env(safe-area-inset-bottom)) !important; }
+    /* barra inferior */
+    .m-bnav{ display:flex; position:fixed; left:0; right:0; bottom:0; z-index:70; background:rgba(26,21,51,0.98); border-top:1px solid rgba(255,255,255,0.1); padding:6px 6px calc(6px + env(safe-area-inset-bottom)); justify-content:space-around; align-items:center; }
+    .m-bnav button{ flex:1; background:none; border:none; color:var(--mist-dim); font:600 10.5px 'Manrope',sans-serif; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; cursor:pointer; }
+    .m-bnav svg{ width:23px; height:23px; }
+    .m-bnav button.on{ color:var(--bone); }
+    .m-bnav button.on svg{ color:var(--purple-light); }
+    .m-bnav .m-plus{ flex:0 0 auto; width:56px; height:56px; margin:-24px 6px 0; border-radius:50%; color:#fff; font-size:32px; font-weight:300; line-height:1; display:grid; place-items:center; background:linear-gradient(135deg,var(--purple-deep),var(--purple) 55%,var(--purple-light)); box-shadow:0 10px 24px -6px rgba(106,98,184,0.8), 0 0 0 4px var(--ink); }
+    .m-sheet-bg{ display:flex; position:fixed; inset:0; z-index:80; background:rgba(6,5,10,0.6); align-items:flex-end; opacity:0; pointer-events:none; transition:opacity .2s; }
+    .m-sheet-bg.show{ opacity:1; pointer-events:auto; }
+    .m-sheet{ width:100%; background:#241d47; border:1px solid rgba(255,255,255,0.12); border-bottom:none; border-radius:24px 24px 0 0; padding:10px 16px calc(18px + env(safe-area-inset-bottom)); transform:translateY(30px); transition:transform .25s cubic-bezier(.2,.8,.25,1); }
+    .m-sheet-bg.show .m-sheet{ transform:none; }
+    .m-grab{ width:40px; height:5px; border-radius:9px; background:rgba(255,255,255,0.2); margin:0 auto 14px; }
+    .m-sheet-title{ font-family:'Fraunces',serif; font-size:19px; font-weight:600; margin:0 4px 12px; }
+    .m-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .m-grid button{ background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--bone); border-radius:16px; padding:16px 10px; font:600 13.5px 'Manrope',sans-serif; display:flex; flex-direction:column; align-items:center; gap:7px; cursor:pointer; }
+    .m-grid button span{ font-size:23px; }
+    .m-links{ margin-top:12px; border-top:1px solid rgba(255,255,255,0.08); padding-top:6px; }
+    .m-links button{ display:block; width:100%; text-align:left; background:none; border:none; color:var(--mist); font:600 14px 'Manrope',sans-serif; padding:12px 6px; cursor:pointer; }
+    .m-links button.danger{ color:var(--overdue); }
+    /* agenda */
+    .m-ag-day{ padding:10px 0 4px; border-top:1px solid rgba(255,255,255,0.07); }
+    .m-ag-day:first-child{ border-top:none; }
+    .m-ag-label{ font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--mist-dim); margin-bottom:6px; }
+    .m-ag-day.hoy .m-ag-label{ color:var(--purple-light); }
+    .m-ag-evt{ display:flex; gap:12px; width:100%; text-align:left; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-left:3px solid var(--c); border-radius:12px; padding:11px 12px; margin-bottom:7px; color:var(--bone); cursor:pointer; font-family:'Manrope',sans-serif; }
+    .m-ag-time{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--mist); min-width:52px; padding-top:1px; }
+    .m-ag-txt{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+    .m-ag-txt b{ font-size:14.5px; font-weight:600; }
+    .m-ag-txt small{ font-size:12px; color:var(--mist-dim); }
+    .m-empty{ text-align:center; color:var(--mist-dim); font-size:13.5px; padding:24px 0; }
+  }
 </style>
 </head>
 <body>
@@ -1439,6 +1521,9 @@
   </div>
 </div>
 
+<nav class="m-bnav" id="mBnav"><button data-go="inicio"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 10 L10 4 L17 10" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 9 V16 H15 V9" stroke-linecap="round" stroke-linejoin="round"/></svg>Inicio</button><button data-go="tareas"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="14" height="13" rx="2"/><path d="M6.5 9.5l1.8 1.8L11.5 8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 14h6" stroke-linecap="round"/></svg>Tareas</button><button class="m-plus" id="mPlusBtn" aria-label="Agregar">+</button><button data-go="programacion"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4.5" width="14" height="12" rx="2"/><path d="M3 8h14"/><path d="M7 3v3M13 3v3" stroke-linecap="round"/></svg>Agenda</button><button id="mMasBtn"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4.5" cy="10" r="1.2"/><circle cx="10" cy="10" r="1.2"/><circle cx="15.5" cy="10" r="1.2"/></svg>Más</button></nav>
+<div class="m-sheet-bg" id="mPlusSheet"><div class="m-sheet"><div class="m-grab"></div><div class="m-sheet-title">¿Qué quieres agregar?</div><div class="m-grid"><button data-add="tarea"><span>✅</span>Tarea</button><button data-add="evento"><span>📅</span>Evento</button><button data-add="idea"><span>💡</span>Idea</button><button data-add="ingreso"><span>💰</span>Ingreso</button><button data-add="egreso" style="grid-column:1/-1"><span>🧾</span>Egreso</button></div></div></div>
+<div class="m-sheet-bg" id="mMasSheet"><div class="m-sheet"><div class="m-grab"></div><div class="m-grid"><button data-go="horarios"><span>🕒</span>Horarios</button><button data-go="ideas"><span>💡</span>Ideas</button><button data-go="financiera"><span>📊</span>Financiera</button><button data-go="habitos"><span>✔️</span>Hábitos</button></div><div class="m-links"><button data-act="sync">↻ Actualizar con lo último del equipo</button><button data-act="export">⬇ Exportar respaldo</button><button data-act="logout" class="danger">Cerrar sesión</button></div></div></div>
 <button class="sync-fab" id="syncFabBtn" title="Actualizar con los cambios de todo el equipo">
   <span class="sync-fab-badge" id="syncFabBadge" style="display:none;"></span>
   <svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M4 10a6 6 0 0110-4.2M16 10a6 6 0 01-10 4.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 3v3h-3M6 17v-3h3" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -2272,6 +2357,7 @@
 
       <div class="prog-layout">
         <div class="panel panel-pad">
+          <div class="m-only" id="mAgenda"></div>
           <div class="cal-grid" id="calGrid"></div>
         </div>
         <div class="panel panel-pad">
@@ -2905,7 +2991,8 @@
     const hNum = String(Number(h));
     return m === '00' ? hNum : `${hNum}:${m}`;
   }
-  function isoDate(d){ return d.toISOString().slice(0,10); }
+  // fecha local (Colombia), no UTC: con toISOString después de las 7 p. m. "hoy" salía como mañana
+  function isoDate(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
   function mondayOfWeek(d){
     const date = new Date(d);
     const day = date.getDay(); // 0=Sun..6=Sat
@@ -6709,6 +6796,114 @@
       }
     }
   }
+  /* ================= VERSIÓN MÓVIL ================= */
+  (function(){
+    const MQ = window.matchMedia ? window.matchMedia('(max-width:640px)') : { matches:false, addEventListener(){} };
+    const esMovil = () => MQ.matches;
+    const $ = id => document.getElementById(id);
+    const PRINCIPALES = ['inicio','tareas','programacion'];
+
+    function irA(view){
+      switchView(view);
+      const main = document.querySelector('.main');
+      if(main) main.scrollTop = 0;
+      window.scrollTo(0,0);
+      if(view === 'tareas') setTimeout(enfocarColumnaUtil, 60);
+    }
+    function marcarBnav(view){
+      document.querySelectorAll('#mBnav [data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === view));
+      $('mMasBtn').classList.toggle('on', !PRINCIPALES.includes(view));
+    }
+    // cualquier cambio de vista (también desde accesos de Inicio) mueve la barra
+    const _switch = switchView;
+    switchView = function(view){ _switch(view); marcarBnav(view); };
+
+    function abrirHoja(id){ $(id).classList.add('show'); }
+    function cerrarHojas(){ document.querySelectorAll('.m-sheet-bg').forEach(h => h.classList.remove('show')); }
+
+    $('mBnav').addEventListener('click', e=>{
+      const go = e.target.closest('[data-go]');
+      if(go){ irA(go.dataset.go); return; }
+      if(e.target.closest('#mPlusBtn')) abrirHoja('mPlusSheet');
+      if(e.target.closest('#mMasBtn')) abrirHoja('mMasSheet');
+    });
+    document.querySelectorAll('.m-sheet-bg').forEach(h => h.addEventListener('click', e=>{ if(e.target === h) cerrarHojas(); }));
+
+    $('mMasSheet').addEventListener('click', e=>{
+      const b = e.target.closest('button');
+      if(!b || b.parentElement === null) return;
+      cerrarHojas();
+      if(b.dataset.go) irA(b.dataset.go);
+      else if(b.dataset.act === 'sync') $('syncFabBtn').click();
+      else if(b.dataset.act === 'export') $('exportDataBtn').click();
+      else if(b.dataset.act === 'logout') $('switchUserBtn').click();
+    });
+    $('mPlusSheet').addEventListener('click', e=>{
+      const b = e.target.closest('[data-add]');
+      if(!b) return;
+      cerrarHojas();
+      const a = b.dataset.add;
+      setTimeout(()=>{
+        if(a === 'tarea') openTaskModal(null);
+        else if(a === 'evento') openEventModal(null, isoDate(new Date()));
+        else if(a === 'idea') openIdeaModal(null);
+        else if(a === 'ingreso'){ irA('financiera'); openIngresoModal(null); }
+        else if(a === 'egreso'){ irA('financiera'); openEgresoModal(null); }
+      }, 120);
+    });
+
+    /* tablero: deslizar entre columnas, empezando por la primera con tareas activas */
+    function enfocarColumnaUtil(){
+      if(!esMovil()) return;
+      const k = document.querySelector('#view-tareas .kanban');
+      if(!k) return;
+      const cols = [...k.querySelectorAll('.kcol')];
+      const i = cols.findIndex(c => !c.querySelector('.empty-state'));
+      if(i > 0) k.scrollTo({ left: cols[i].offsetLeft - 16, behavior:'instant' in window ? 'auto' : 'auto' });
+    }
+
+    /* programación: en el celular, agenda en lista en vez del calendario del mes */
+    const _renderCalendar = renderCalendar;
+    renderCalendar = function(){
+      _renderCalendar();
+      renderAgendaMovil();
+    };
+    function renderAgendaMovil(){
+      const box = $('mAgenda');
+      if(!box) return;
+      if(!eventsLoaded){ box.innerHTML = '<div class="loading-row"><div class="spinner"></div> Cargando…</div>'; return; }
+      const year = calRefDate.getFullYear(), month = calRefDate.getMonth();
+      const todayIso = isoDate(new Date());
+      const proyectoVal = $('progProyectoFilter').value;
+      const ultimo = new Date(year, month+1, 0).getDate();
+      const esMesActual = year === new Date().getFullYear() && month === new Date().getMonth();
+      const desde = esMesActual ? new Date().getDate() : 1;
+      let html = '';
+      for(let dnum = desde; dnum <= ultimo; dnum++){
+        const d = new Date(year, month, dnum), dIso = isoDate(d);
+        const evs = events.filter(e=>{
+          if(!eventOccursOnDate(e, dIso)) return false;
+          if(activeEventTipoFilter !== '__todos__' && e.tipo !== activeEventTipoFilter) return false;
+          if(proyectoVal !== '__todos__' && e.proyecto !== proyectoVal) return false;
+          return true;
+        }).sort((a,b)=> (a.hora||'99').localeCompare(b.hora||'99'));
+        if(!evs.length) continue;
+        const etiqueta = dIso === todayIso ? 'Hoy' : d.toLocaleDateString('es-CO', { weekday:'long', day:'numeric', month:'short' });
+        html += `<div class="m-ag-day${dIso===todayIso?' hoy':''}"><div class="m-ag-label">${etiqueta}</div>` +
+          evs.map(e => `<button class="m-ag-evt" data-evt-id="${e.id}" style="--c:${EVENTO_TIPO_HEX[e.tipo]||'#a89dee'}">
+              <span class="m-ag-time">${e.hora ? (isEventLiveNow(e) ? '● ahora' : e.hora) : 'Todo el día'}</span>
+              <span class="m-ag-txt"><b>${escapeHtml(e.titulo)}</b><small>${escapeHtml(e.tipo||'')}${e.proyecto ? ' · '+escapeHtml(e.proyecto) : ''}${(e.participantes||[]).length ? ' · '+e.participantes.map(p=>(MIEMBROS.find(m=>m.id===p)||{}).iniciales||p).join(', ') : ''}</small></span>
+            </button>`).join('') + '</div>';
+      }
+      box.innerHTML = html || `<div class="m-empty">No hay eventos ${esMesActual ? 'pendientes este mes' : 'en este mes'}.<br><button class="btn btn-primary btn-sm" id="mAgNuevo" style="margin-top:12px">+ Nuevo evento</button></div>`;
+      box.querySelectorAll('[data-evt-id]').forEach(b => b.addEventListener('click', ()=> openEventModal(b.dataset.evtId)));
+      const nb = $('mAgNuevo'); if(nb) nb.addEventListener('click', ()=> openEventModal(null, isoDate(new Date())));
+    }
+
+    marcarBnav((document.querySelector('.view.active')||{id:'view-inicio'}).id.replace('view-',''));
+    if(MQ.addEventListener) MQ.addEventListener('change', ()=> renderAgendaMovil());
+  })();
+
   init();
 })();
 </script>
